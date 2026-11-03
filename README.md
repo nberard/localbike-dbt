@@ -62,6 +62,11 @@ un test générique maison `unique_combination` (grain magasin × mois), et troi
 > La baisse apparente du CA 2018 vient de cette troncature, pas d'un recul de l'activité.
 > Les analyses temporelles doivent se limiter à janvier 2016 – mars 2018.
 
+
+### Rapport Data Studio
+
+https://datastudio.google.com/s/iIVPgXTheVo
+
 ## Lancer le projet
 
 ```bash
