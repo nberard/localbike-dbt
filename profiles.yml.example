@@ -1,0 +1,11 @@
+# Copier dans ~/.dbt/profiles.yml
+localbike:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth            # gcloud auth application-default login
+      project: api-project-923744656873
+      dataset: localbike       # => localbike_staging / localbike_intermediate / localbike_marts
+      location: US
+      threads: 4

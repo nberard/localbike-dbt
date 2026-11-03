@@ -1,0 +1,107 @@
+version: 2
+
+models:
+  - name: stg_localbike__orders
+    description: Commandes typées, statut décodé, 'NULL' texte converti en vraie valeur nulle.
+    columns:
+      - name: order_id
+        description: Identifiant de la commande.
+        tests: [unique, not_null]
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships: {to: ref('stg_localbike__customers'), field: customer_id}
+      - name: store_id
+        tests:
+          - not_null
+          - relationships: {to: ref('stg_localbike__stores'), field: store_id}
+      - name: staff_id
+        tests:
+          - not_null
+          - relationships: {to: ref('stg_localbike__staffs'), field: staff_id}
+      - name: order_status_code
+        description: "Code statut brut : 1 Pending, 2 Processing, 3 Rejected, 4 Completed."
+        tests:
+          - accepted_values: {values: [1, 2, 3, 4], quote: false}
+      - name: order_status
+        tests:
+          - not_null
+          - accepted_values: {values: ['Pending', 'Processing', 'Rejected', 'Completed']}
+      - name: order_date
+        tests: [not_null]
+      - name: required_date
+        description: Date de livraison promise au client.
+      - name: shipped_date
+        description: Date d'expédition, nulle si la commande n'est pas encore expédiée.
+
+  - name: stg_localbike__order_items
+    description: Lignes de commande typées.
+    columns:
+      - name: order_item_id
+        description: Clé technique order_id-item_id.
+        tests: [unique, not_null]
+      - name: order_id
+        tests:
+          - not_null
+          - relationships: {to: ref('stg_localbike__orders'), field: order_id}
+      - name: product_id
+        tests:
+          - not_null
+          - relationships: {to: ref('stg_localbike__products'), field: product_id}
+      - name: quantity
+        tests: [not_null]
+      - name: list_price
+        description: Prix catalogue unitaire au moment de la commande (USD).
+        tests: [not_null]
+      - name: discount_rate
+        description: Remise appliquée, entre 0 et 1.
+        tests: [not_null]
+
+  - name: stg_localbike__customers
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: phone
+        description: Téléphone, souvent absent (nul).
+
+  - name: stg_localbike__products
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+      - name: brand_id
+        tests:
+          - relationships: {to: ref('stg_localbike__brands'), field: brand_id}
+      - name: category_id
+        tests:
+          - relationships: {to: ref('stg_localbike__categories'), field: category_id}
+
+  - name: stg_localbike__brands
+    columns:
+      - name: brand_id
+        tests: [unique, not_null]
+
+  - name: stg_localbike__categories
+    columns:
+      - name: category_id
+        tests: [unique, not_null]
+
+  - name: stg_localbike__stores
+    columns:
+      - name: store_id
+        tests: [unique, not_null]
+
+  - name: stg_localbike__staffs
+    columns:
+      - name: staff_id
+        tests: [unique, not_null]
+      - name: store_id
+        tests:
+          - relationships: {to: ref('stg_localbike__stores'), field: store_id}
+
+  - name: stg_localbike__stocks
+    columns:
+      - name: stock_id
+        description: Clé technique store_id-product_id.
+        tests: [unique, not_null]
+      - name: stock_quantity
+        tests: [not_null]

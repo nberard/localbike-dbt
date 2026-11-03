@@ -1,0 +1,119 @@
+version: 2
+
+models:
+  - name: fct_sales
+    description: >
+      Table de faits des ventes, une ligne par article commandé. Toutes les dimensions
+      (magasin, vendeur, client, produit, marque, catégorie) sont déjà jointes pour un usage
+      en self-service dans l'outil de BI. Pour le CA réalisé, filtrer sur is_revenue_recognized.
+    columns:
+      - name: order_item_id
+        description: Clé unique order_id-item_id.
+        tests: [unique, not_null]
+      - name: order_id
+        tests:
+          - not_null
+          - relationships: {to: ref('stg_localbike__orders'), field: order_id}
+      - name: order_date
+        tests: [not_null]
+      - name: order_month
+        description: Premier jour du mois de commande.
+      - name: order_status
+        tests:
+          - accepted_values: {values: ['Pending', 'Processing', 'Rejected', 'Completed']}
+      - name: is_revenue_recognized
+        description: Vrai si la commande n'est pas rejetée ; à utiliser pour tout calcul de CA.
+        tests: [not_null]
+      - name: store_name
+        tests: [not_null]
+      - name: product_id
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_products'), field: product_id}
+      - name: customer_id
+        tests:
+          - relationships: {to: ref('dim_customers'), field: customer_id}
+      - name: quantity
+        description: Nombre d'unités.
+      - name: list_price
+        description: Prix catalogue unitaire (USD).
+      - name: discount_rate
+        description: Remise accordée, entre 0 et 1.
+      - name: gross_revenue
+        description: quantity × list_price, avant remise (USD).
+      - name: discount_amount
+        description: Montant de la remise (USD).
+      - name: net_revenue
+        description: CA net = quantity × list_price × (1 − discount_rate) (USD).
+        tests: [not_null]
+
+  - name: dim_products
+    description: Catalogue produits avec marque, catégorie et stock total tous magasins.
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+      - name: brand_name
+        tests: [not_null]
+      - name: category_name
+        tests: [not_null]
+      - name: total_stock_quantity
+        description: Stock total, tous magasins confondus (photo à date).
+
+  - name: dim_customers
+    description: Un client par ligne avec son historique d'achat, hors commandes rejetées.
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: nb_orders
+        description: Nombre de commandes non rejetées.
+      - name: lifetime_net_revenue
+        description: CA net cumulé du client (USD).
+      - name: is_repeat_customer
+        description: Vrai si le client a passé plus d'une commande.
+
+  - name: mart_store_monthly_performance
+    description: >
+      KPIs mensuels par magasin pour l'équipe des opérations : volume, CA, panier moyen,
+      remises et qualité logistique. Le CA n'inclut que les commandes non rejetées.
+    tests:
+      - unique_combination:
+          columns: [store_id, order_month]
+    columns:
+      - name: store_id
+        tests: [not_null]
+      - name: order_month
+        tests: [not_null]
+      - name: nb_orders
+        description: Nombre total de commandes, tous statuts confondus.
+      - name: nb_rejected_orders
+        description: Commandes rejetées.
+      - name: nb_open_orders
+        description: Commandes ni expédiées ni rejetées (en attente ou en préparation).
+      - name: net_revenue
+        description: CA net (USD).
+      - name: avg_order_value
+        description: Panier moyen net (USD) sur les commandes non rejetées.
+      - name: late_shipment_rate
+        description: Part des commandes expédiées après la date promise.
+      - name: avg_shipping_delay_days
+        description: Délai moyen entre commande et expédition (jours).
+
+  - name: mart_product_store_performance
+    description: >
+      Ventes et stock par couple magasin × produit. Sert à repérer les best-sellers,
+      les produits en rupture qui se vendent et le stock dormant à déstocker.
+    columns:
+      - name: store_product_id
+        tests: [unique, not_null]
+      - name: units_sold
+        description: Unités vendues sur toute la période (hors commandes rejetées).
+      - name: units_sold_last_12m
+        description: Unités vendues sur les 12 mois précédant la dernière commande du dataset.
+      - name: stock_quantity
+        description: Stock actuel du magasin pour ce produit.
+      - name: months_of_stock
+        description: Mois de stock au rythme des 12 derniers mois (nul si aucune vente).
+      - name: is_dormant_stock
+        description: Du stock mais aucune vente sur 12 mois.
+      - name: is_out_of_stock_seller
+        description: Plus de stock alors que le produit s'est vendu sur 12 mois.

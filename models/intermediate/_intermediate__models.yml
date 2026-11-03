@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: int_localbike__order_items_enriched
+    description: Lignes de commande enrichies du produit, de la marque, de la catégorie et des montants calculés.
+    columns:
+      - name: order_item_id
+        tests: [unique, not_null]
+      - name: net_revenue
+        description: quantity × list_price × (1 − discount_rate).
+        tests: [not_null]
+
+  - name: int_localbike__orders_enriched
+    description: Une ligne par commande avec magasin, vendeur, montants agrégés et indicateurs logistiques.
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: is_revenue_recognized
+        description: Faux pour les commandes rejetées.
+      - name: shipping_delay_days
+        description: Jours entre commande et expédition ; nul si non expédiée.
+      - name: is_shipped_late
+        description: Expédiée après la date promise au client.

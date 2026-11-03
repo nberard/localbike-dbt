@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: localbike
+    description: >
+      Données brutes de Local Bike (3 magasins aux US : Santa Cruz, Baldwin, Rowlett),
+      importées telles quelles dans BigQuery depuis les CSV fournis. Toutes les colonnes
+      sont en STRING ; le typage est fait dans la couche staging.
+    database: api-project-923744656873
+    schema: localbike_raw
+    tables:
+      - name: orders
+        description: Une ligne par commande.
+      - name: order_items
+        description: Une ligne par article d'une commande.
+      - name: customers
+        description: Clients de Local Bike.
+      - name: products
+        description: Catalogue produits.
+      - name: brands
+        description: Marques.
+      - name: categories
+        description: Catégories de vélos.
+      - name: stores
+        description: Magasins.
+      - name: staffs
+        description: Vendeurs et managers.
+      - name: stocks
+        description: Stock disponible par magasin et par produit (photo à date).
